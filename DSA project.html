@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Circular Queue</title>
+  <style>
+    body {
+      background-color: #c5eedc;
+      font-family: Arial, sans-serif;
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    label {
+      font-weight: bold;
+    }
+
+    input[type="number"] {
+      width: 50px;
+      margin-right: 10px;
+    }
+    .queueElement {
+      font-size: 20px;
+    }
+    button {
+      padding: 8px 16px;
+      font-size: 14px;
+      background-color: #4caf50;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-right: 10px;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    canvas {
+      border: 1px solid rgb(0, 63, 31);
+      margin: 20px;
+      background-color: #e9faf0;
+    }
+
+    .info {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Circular Queue</h1>
+  <center><label for="queueSize">Queue Size:</label>
+  <input type="number" id="queueSize" min="1" value="5">
+  <button onclick="initQueue()">Create Queue</button>
+  <br><br>
+  <canvas id="queueCanvas" width="600" height="300"></canvas>
+</center>
+  <center><button onclick="enqueue()">Enqueue</button>
+  <button onclick="dequeue()">Dequeue</button></center>
+    <br><br><br>
+  <div class="info">
+    <label>FRONT🔴: </label>
+    <span id="frontValue"></span>
+    <br>
+    <label>REAR🔵: </label>
+    <span id="rearValue"></span>
+  </div>
+  
+  <script>
+    var canvas = document.getElementById('queueCanvas');
+    var ctx = canvas.getContext('2d');
+    var queue = [];
+    var front = 0;
+    var rear = -1;
+    var size = 0;
+    
+    function initQueue() {
+      size = parseInt(document.getElementById('queueSize').value);
+      queue = new Array(size);
+      front = -1;
+      rear = -1;
+      drawQueue();
+      updateFrontRearValues();
+    }
+    
+    function enqueue() {
+      if (isFull()) {
+        alert('Queue is full!');
+        return;
+      }
+      
+      var value = prompt('Enter a value to enqueue:');
+      if(isEmpty()){
+        front=0;
+        rear=0;
+      }
+      else{
+      rear = (rear + 1) % size;
+      }
+      queue[rear] = value;
+      drawQueue();
+      updateFrontRearValues();
+    }
+    
+    function dequeue() {
+      if (isEmpty()) {
+        alert('Queue is empty!');
+        return;
+      }
+      
+      var dequeuedValue = queue[front];
+      queue[front] = undefined;
+      front = (front + 1) % size;
+      drawQueue();
+      updateFrontRearValues();
+      alert('Dequeued value: ' + dequeuedValue);
+    }
+    
+    function isFull() {
+      return queue.filter(Boolean).length === size;
+    }
+    
+    function isEmpty() {
+      return queue.filter(Boolean).length === 0;
+    }
+    function drawQueue() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Draw the circular queue as a double ring with divisions
+  var innerRadius = 80;
+  var outerRadius = 120;
+  var centerX = canvas.width / 2;
+  var centerY = canvas.height / 2;
+  var divisionCount = size;
+  var angle = (2*Math.PI) / divisionCount;
+
+  // Draw outer ring
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, outerRadius, 0, 2 * Math.PI);
+  ctx.fillStyle = "#e0e0e0";
+  ctx.fill();
+
+  // Draw inner ring
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, innerRadius, 0, 2 * Math.PI);
+  ctx.fillStyle = "#ffffff";
+  ctx.fill();
+  ctx.strokeStyle = "#000000";
+  ctx.stroke();
+
+  // Draw divisions on the ring
+  for (var i = 0; i < divisionCount; i++) {
+    var divisionAngle = i * angle+120;
+
+    // Calculate the start and end points of the division
+    var startX = centerX + innerRadius * Math.cos(divisionAngle);
+    var startY = centerY + innerRadius * Math.sin(divisionAngle);
+    var endX = centerX + outerRadius * Math.cos(divisionAngle);
+    var endY = centerY + outerRadius * Math.sin(divisionAngle);
+
+    // Draw the division line
+    ctx.beginPath();
+    ctx.moveTo(startX, startY);
+    ctx.lineTo(endX, endY);
+    ctx.strokeStyle = "#000000";
+    ctx.stroke();
+  }
+
+  // Draw front pointer
+  var frontX = centerX + innerRadius * Math.cos(front * angle);
+  var frontY = centerY + innerRadius * Math.sin(front * angle);
+  ctx.fillStyle = "#ff0000";
+  ctx.beginPath();
+  ctx.arc(frontX, frontY, 5, 0, 2 * Math.PI);
+  ctx.fill();
+
+  // Draw rear pointer
+  var rearX = centerX + innerRadius * Math.cos(rear * angle);
+  var rearY = centerY + innerRadius * Math.sin(rear * angle);
+  ctx.fillStyle = "#0000ff";
+  ctx.beginPath();
+  ctx.arc(rearX, rearY, 5, 0, 2 * Math.PI);
+  ctx.fill();
+
+  // Draw queue elements
+  for (var i = 0; i < size; i++) {
+    var elementIndex = (front + i) % size; // Calculate the actual index of the element in the queue
+    var elementAngle = elementIndex * angle; // Calculate the angle for the element position
+
+    // Calculate the position for the element text
+    var textRadius = (innerRadius + outerRadius) / 2; // Position the text in the middle of the two rings
+    var textX = centerX + textRadius * Math.cos(elementAngle);
+    var textY = centerY + textRadius * Math.sin(elementAngle);
+
+    if (queue[elementIndex] !== undefined) {
+      ctx.fillStyle = "#000000";
+      ctx.font = "bold 20px Arial";
+      ctx.textAlign = "center"; // Align the text horizontally in the middle
+      ctx.textBaseline = "middle"; // Align the text vertically in the middle
+      ctx.fillText(queue[elementIndex], textX, textY);
+    }
+  }
+}
+  function updateFrontRearValues() {
+      document.getElementById('frontValue').textContent = front;
+      document.getElementById('rearValue').textContent = rear;
+}
+    </script>
+</body>
+</html>
